@@ -1,24 +1,17 @@
-const download = require('download');
+const get = require('download');
 const async = require('async');
 const cheerio = require('cheerio');
 const fs = require('fs-extra');
 const path = require('path');
 const url = require('url');
-const parsePath = require('parse-filepath');
-const sanitizeFilename = require("sanitize-filename");
-const { hasher } = require('./helper');
-
-const ROOT = 'https://en.unesco.org/womeninafrica/';
-const HOSTNAME = url.parse(ROOT).hostname;
-const WAIT_INTERVAL = 250; // to respect robots.txt
-const PATHS = {
-  OUT: {
-    BASE: path.join(__dirname, 'out'),
-    ASSETS: path.join(__dirname, 'out/', 'assets/'),
-  },
-  ASSETS_DB: path.join(__dirname, 'assets.db'),
-  PAGE_DB: path.join(__dirname, 'pages.db'),
-};
+// const parsePath = require('parse-filepath');
+const { hasher, extensionFromHref, filenameFromHref } = require('./helper');
+const {
+  ROOT,
+  HOSTNAME,
+  WAIT_INTERVAL,
+  PATHS,
+} = require('./constants');
 
 fs.mkdirpSync(PATHS.OUT.BASE);
 fs.mkdirpSync(PATHS.OUT.ASSETS);
@@ -51,37 +44,6 @@ function addToQueue(item) {
   console.log('adding to queue');
 }
 
-function extensionFromHref(href) {
-  const urlObject = url.parse(href);
-  let path = urlObject.path;
-  if (!href || !path) return '';
-
-  const finalSegment = path.split('.').slice(-1)[0];
-  if (/\./.test(href) === false || finalSegment.length > 4) {
-    return 'html'; // edgecase. means no detectable extension.
-  }
-
-  return finalSegment;
-}
-
-function filenameFromHref(href) {
-  const ext = extensionFromHref(href);
-  const urlObject = url.parse(href);
-  let path = urlObject.path;
-  // console.log('path:', urlObject)
-  if (!href || !path) return '';
-
-  if (path[path.length - 1] === '/') path = path.slice(0, -1); // if last char is /, then remove
-  if (path[0] === '/') { // if first char is /, then remove
-    path = path.slice(1);
-    path = path + '.html';
-  }
-  // if (ext === 'html' || ext === 'htm') path = path + '.html'; // if no .html ending, add it
-  path = path.replace(/\//g, '_'); // replace slashes
-
-  // the returned path must not have special chars. replace.
-  return sanitizeFilename(path);
-}
 
 // -------------------------------------------------------------------------- //
 
@@ -109,7 +71,7 @@ function processPage(pageHref, callback) {
   }
 
   console.log('- Downloading:', pageHref);
-  download(pageHref).then(buffer => {
+  get(pageHref).then(buffer => {
     if (!buffer) return;
     const $ = cheerio.load(buffer.toString());
     console.log('  + searching for hrefs');
