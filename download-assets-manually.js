@@ -3,6 +3,7 @@ const fs = require('fs-extra');
 const readline = require('linebyline');
 const async = require('async');
 const path = require('path');
+let childProcess = require('child_process');
 const { PATHS, WAIT_INTERVAL } = require('./constants');
 const { hasher, extensionFromHref, filenameFromHref } = require('./helper');
 
@@ -17,33 +18,33 @@ function downloadAsset(href, callback) {
   const ext = extensionFromHref(href);
   const basePath = ext === 'html' ? PATHS.OUT.BASE : PATHS.OUT.ASSETS;
   const filepath = path.join(basePath, filename);
-  // console.log('=== filepath', filepath)
 
   // abort ifs
-  if (!href || filename === '') {
-    // console.log('- Skipping. href was null');
-    callback();
-    return;
-  } else if (fs.existsSync(filepath)) {
-    // console.log('- Skipping... Already Exists');
+  if (!href || filename === '' || fs.existsSync(filepath)) {
     callback();
     return;
   }
 
   console.log('\nQueue Size Remaining:', queue.length());
-
   console.log('- Downloading:', href);
-  get(href)
-    .then(buffer => {
-      const outpath = path.join(basePath, filename);
-      fs.writeFileSync(outpath, buffer)
-      console.log('- Success');
-      setTimeout(callback, WAIT_INTERVAL); // respect robots.txt
-    })
-    .catch(err => {
-      console.log('  + Error downloading', href, err);
-      callback();
-    });
+
+  const cmd = `cd out/assets/ && wget -nc -t 10 ${href}`;
+  childProcess.exec(cmd, (err, stdout, stderr) => {
+    if (err) console.log(cmd, err, stdout, stderr);
+
+    callback();
+  });
+  // get(href)
+  //   .then(buffer => {
+  //     const outpath = path.join(basePath, filename);
+  //     fs.writeFileSync(outpath, buffer)
+  //     console.log('- Success');
+  //     setTimeout(callback, WAIT_INTERVAL); // respect robots.txt
+  //   })
+  //   .catch(err => {
+  //     console.log('  + Error downloading', href, err);
+  //     callback();
+  //   });
 }
 
 function onLineRead(line, lineCount, byteCount) {

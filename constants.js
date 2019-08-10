@@ -3,11 +3,14 @@ const path = require('path');
 
 const ROOT = 'https://en.unesco.org/womeninafrica/';
 const HOSTNAME = url.parse(ROOT).hostname;
-const WAIT_INTERVAL = 250; // to respect robots.txt
+const WAIT_INTERVAL = 1000; // to respect robots.txt
 const PATHS = {
   OUT: {
     BASE: path.join(__dirname, 'out'),
     ASSETS: path.join(__dirname, 'out/', 'assets/'),
+  },
+  OUT2: {
+    BASE: path.join(__dirname, 'out2'),
   },
   ASSETS_DB: path.join(__dirname, 'assets.db'),
   PAGE_DB: path.join(__dirname, 'pages.db'),

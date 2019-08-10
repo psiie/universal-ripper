@@ -1,6 +1,9 @@
 out/*
 assets.db
 pages.db
+map/
+map.zip
+misc/*
 # Created by https://www.gitignore.io/api/osx,node,linux,python,windows
 # Edit at https://www.gitignore.io/?templates=osx,node,linux,python,windows
 

@@ -1,5 +1,7 @@
 const url = require('url');
 const sanitizeFilename = require("sanitize-filename");
+const fs = require('fs-extra');
+const path = require('path');
 
 function hasher(str) {
   var hash = 5381,
@@ -18,10 +20,10 @@ function hasher(str) {
 
 function extensionFromHref(href) {
   const urlObject = url.parse(href);
-  let path = urlObject.path;
-  if (!href || !path) return '';
+  let { pathname } = urlObject;
+  if (!href || !pathname) return '';
 
-  const finalSegment = path.split('.').slice(-1)[0];
+  const finalSegment = pathname.split('.').slice(-1)[0];
   if (/\./.test(href) === false || finalSegment.length > 4) {
     return 'html'; // edgecase. means no detectable extension.
   }
@@ -36,12 +38,14 @@ function filenameFromHref(href, makeShort = false) {
   // console.log('path:', urlObject)
   if (!href || !path) return '';
 
-  if (makeShort) path = path.split('/').slice(-1)[0];
   if (path[0] === '/') path = path.slice(1); // if first char is /, then remove
   if (path[path.length - 1] === '/') { // if last char is /, then remove
     path = path.slice(0, -1);
     path = path + '.html';
+  } else if (ext === 'html') {
+    path = path + '.html';
   }
+  if (makeShort) path = path.split('/').slice(-1)[0];
     
   // if (ext === 'html' || ext === 'htm') path = path + '.html'; // if no .html ending, add it
   path = path.replace(/\//g, '_'); // replace slashes
@@ -50,8 +54,18 @@ function filenameFromHref(href, makeShort = false) {
   return sanitizeFilename(path);
 }
 
+function loadFile(filepath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path.resolve(filepath), (err, buffer) => {
+      if (err) reject(err);
+      else resolve(buffer);
+    });
+  });
+}
+
 module.exports = {
   hasher,
   extensionFromHref,
   filenameFromHref,
+  loadFile,
 };
