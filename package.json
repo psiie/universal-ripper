@@ -6,18 +6,23 @@
   "dependencies": {
     "async": "^3.1.0",
     "cheerio": "^1.0.0-rc.3",
+    "dotenv": "^8.0.0",
     "download": "^7.1.0",
     "fs-extra": "^8.1.0",
     "linebyline": "^1.3.0",
+    "nedb": "^1.8.0",
     "path": "^0.12.7",
     "rimraf": "^2.6.3",
     "sanitize-filename": "^1.6.2",
-    "url": "^0.11.0"
+    "url": "^0.11.0",
+    "yargs": "^13.3.0"
   },
   "scripts": {
-    "crawl": "node crawl.js",
-    "download": "node download.js",
     "clean": "rimraf out/ && rimraf assets.db && rimraf pages.db",
-    "clean:assets": "rimraf out/assets/"
+    "clean:assets": "rimraf out/assets/",
+    "crawl": "node crawl.js",
+    "find": "node mutate.js --findAssets",
+    "download": "node download.js",
+    "mutate": "node mutate.js"
   }
 }
