@@ -1,7 +1,9 @@
+const cheerio = require('cheerio');
 const url = require('url');
 const sanitizeFilename = require("sanitize-filename");
 const fs = require('fs-extra');
 const path = require('path');
+const { WAIT_INTERVAL } = require('./constants');
 
 function hasher(str) {
   var hash = 5381,
@@ -17,6 +19,40 @@ function hasher(str) {
   return hash >>> 0;
 }
 
+function tryCatch(fn) {
+  return new Promise((resolve, reject) => {
+    let result;
+
+    try {
+      result = fn();
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
+    resolve(result);
+  });
+}
+
+function bufferToCheerio(buffer) {
+  if (!buffer) return reject();
+  else return tryCatch(() => cheerio.load(buffer.toString()));
+}
+
+function save(filepath, data) {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filepath, data, 'utf8', err => {
+      if (err) {
+        console.log('  + error writing file', htmlOutPath, err);
+        reject();
+        return;
+      }
+
+      console.log('  + saved');
+      resolve();
+    });
+  });
+}
 
 function extensionFromHref(href) {
   const urlObject = url.parse(href);
@@ -68,4 +104,7 @@ module.exports = {
   extensionFromHref,
   filenameFromHref,
   loadFile,
+  tryCatch,
+  save,
+  bufferToCheerio,
 };

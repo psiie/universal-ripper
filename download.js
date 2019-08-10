@@ -17,15 +17,9 @@ function downloadAsset(href, callback) {
   const ext = extensionFromHref(href);
   const basePath = ext === 'html' ? PATHS.OUT.BASE : PATHS.OUT.ASSETS;
   const filepath = path.join(basePath, filename);
-  // console.log('=== filepath', filepath)
 
   // abort ifs
-  if (!href || filename === '') {
-    // console.log('- Skipping. href was null');
-    callback();
-    return;
-  } else if (fs.existsSync(filepath)) {
-    // console.log('- Skipping... Already Exists');
+  if (!href || filename === '' || fs.existsSync(filepath)) {
     callback();
     return;
   }
