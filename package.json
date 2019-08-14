@@ -23,6 +23,8 @@
     "crawl": "node crawl.js",
     "find": "node mutate.js --findAssets",
     "download": "node download.js",
-    "mutate": "node mutate.js"
+    "download:force": "node download.js --force",
+    "mutate": "node mutate.js",
+    "shrink:assets": "node shrinkAssets.js"
   }
 }

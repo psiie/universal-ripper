@@ -35,20 +35,19 @@ function tryCatch(fn) {
 }
 
 function bufferToCheerio(buffer) {
-  if (!buffer) return reject();
-  else return tryCatch(() => cheerio.load(buffer.toString()));
+  return tryCatch(() => cheerio.load(buffer.toString()));
 }
 
 function save(filepath, data, dryRun = false) {
   return new Promise((resolve, reject) => {
     if (dryRun) {
-      callback();
+      resolve();
       return;
     }
 
     fs.writeFile(filepath, data, 'utf8', err => {
       if (err) {
-        console.log('  + error writing file', htmlOutPath, err);
+        console.log('  + error writing file', filepath, err);
         reject();
         return;
       }

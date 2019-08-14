@@ -1,5 +1,6 @@
 out/*
 assets.db
+assets_failed.db
 pages.db
 map/
 map.zip

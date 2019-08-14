@@ -44,12 +44,13 @@ function findElements($) {
     const src = attribs[selector]; // could be href or src
     if (!src) return;
     const attribFilename = filenameFromHref(src, true);
+    const attribFilenameDoubleEncoded = encodeURIComponent(attribFilename); // browsers auto-decode. Is problematic if the filename is encoded. So we double encode.
     const attribFilenameExt = extensionFromHref(attribFilename);
     const isHTML = /html?/.test(attribFilenameExt);
     const checkBasePath = isHTML ? PATHS.OUT.BASE : PATHS.OUT.ASSETS; // if .html file, then check in the base folder instead
     const checkFullPath = path.join(checkBasePath, attribFilename);
     const exists = fs.existsSync(checkFullPath);
-    const newSrc = path.join(isHTML ? '' : 'assets', attribFilename);
+    const newSrc = path.join(isHTML ? '' : 'assets', attribFilenameDoubleEncoded);
 
     if (exists) {
       item.attribs[selector] = newSrc;
