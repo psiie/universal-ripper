@@ -4,19 +4,20 @@ const fs = require('fs-extra');
 const path = require('path');
 const url = require('url');
 const chalk = require('chalk');
+const { puppet } = require('./puppeteer');
 const {
   hasher,
   extensionFromHref,
   filenameFromHref,
   save,
   bufferToCheerio,
-} = require('./utils');
+} = require('../utils');
 const {
   ROOT,
   HOSTNAME,
   PATHS,
   WAIT_INTERVAL,
-} = require('./constants');
+} = require('../constants');
 
 // -- Setup -- //
 const queueMirror = {}; // used to dedup entries
@@ -89,8 +90,6 @@ function processPage(pageHref, callback) {
   const error2 = ext !== 'html' && ext !== 'htm';
   const error3 = fs.existsSync(filepath);
 
-  console.log('ext:', ext, error2);
-
   // -- Abort ifs -- //
   if (error3 || error2 || error1) {
     // console.log('error', error3, error2, error1)
@@ -104,7 +103,7 @@ function processPage(pageHref, callback) {
   console.log('\nQueue Size Remaining:', queue.length())
   console.log(chalk.blue('- Downloading:', pageHref));
 
-  get(pageHref)
+  puppet.get(pageHref)
     .then(bufferToCheerio)
     .then(findElements)
     .then(data => save(filepath, data))
@@ -115,7 +114,10 @@ function processPage(pageHref, callback) {
 // -------------------------------------------------------------------------- //
 
 // -- Start -- //
-const queue = async.queue(processPage, 8);
+const queue = async.queue(processPage, 1);
 queue.push(ROOT);
 queue.error(err => console.log('queue error:', err));
-queue.drain(() => console.log('\nAll items have been processed'));
+queue.drain(() => {
+  console.log('\nAll items have been processed');
+  puppet.close();
+});

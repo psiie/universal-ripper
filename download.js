@@ -17,7 +17,7 @@ function log(str) {
 
 // -------------------------------------------------------------------------- //
 
-function _get(href, filepath) {
+function _get(href, filepath, outputFilename) {
   return new Promise((resolve) => {
     download(href)
       .then(buffer => {
@@ -32,10 +32,10 @@ function _get(href, filepath) {
   });
 }
 
-function _wget(href) {
+function _wget(href, outputFilename) {
   return new Promise((resolve) => {
     log('- Trying fallback');
-    const cmd = `cd out/assets/ && wget -nc -t 10 --tries 1 ${href}`;
+    const cmd = `cd out/assets/ && wget -nc -t 10 --tries 1 -O ${outputFilename} ${href}`;
     childProcess.exec(cmd, (err /* , stdout, stderr */) => {
       if (err) {
         log('  + Failed [fallback]');
@@ -51,8 +51,9 @@ function _wget(href) {
 
 async function smartDownload(href, filepath, callback) {
   // _get and _wget are side-effects.
-  const data = await _get(href, filepath)
-  if (!data && argv.findAssets) await _wget(href);
+  const outputFilename = '';
+  const data = await _get(href, filepath, outputFilename)
+  if (!data && argv.findAssets) await _wget(href, outputFilename);
 
   console.log('Waiting for cooldown');
   setTimeout(callback, WAIT_INTERVAL);
@@ -60,22 +61,32 @@ async function smartDownload(href, filepath, callback) {
 
 // -------------------------------------------------------------------------- //
 
-function downloadAsset(href, callback) {
-  const filename = filenameFromHref(href, true);
-  const ext = extensionFromHref(href);
+function downloadAsset(document, callback) {
+  const { url } = document;
+  const filename = filenameFromHref(url, true);
+  /* todo: assets need hashes. name collision occurs on 3/1/3.png and 1/1/3.png, ect.
+  solution is to use a hash based on the file (procedural). That way we can get the
+  hash no matter where in the process we are */
+
+  // const filenameWithHash = (() => {
+  //   const filenameSplit = filename.split('.');
+  //   filenameSplit.splice(-1, 0, _id);
+  //   return filenameSplit.join('.');
+  // })();
+  const ext = extensionFromHref(url);
   const basePath = ext === 'html' ? PATHS.OUT.BASE : PATHS.OUT.ASSETS;
   const filepath = path.join(basePath, filename);
 
   // abort ifs
-  if (!href || filename === '' || fs.existsSync(filepath)) {
-    log('+ Skipping' + ' ' +  filename + ' ' +  href);
+  if (!url || filename === '' || fs.existsSync(filepath)) {
+    log('+ Skipping' + ' ' +  filename + ' ' +  url);
     callback();
     return;
   }
 
   log('\nQueue Size Remaining:' + ' ' +  queue.length());
-  log('- Downloading:' + ' ' +  href);
-  smartDownload(href, filepath, callback);
+  log('- Downloading:' + ' ' +  url);
+  smartDownload(url, filepath, callback);
 }
 
 // -------------------------------------------------------------------------- //
@@ -87,8 +98,8 @@ function main() {
 
   db.find({}, (err, docs) => {
     if (err) log('db.find() error:', err);
-    const cleanDocs = docs.map(doc => doc.url);
-    queue.push(cleanDocs);
+    // const cleanDocs = docs.map(doc => doc.url);
+    queue.push(docs);
   });
 }
 

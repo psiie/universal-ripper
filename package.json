@@ -21,7 +21,7 @@
   "scripts": {
     "clean": "rimraf out/ && rimraf out2/ && rimraf assets.db && rimraf pages.db && rimraf assets_failed.db",
     "clean:assets": "rimraf out/assets/",
-    "crawl": "node crawl.js",
+    "crawl": "node spider/standard.js",
     "find": "node mutate.js --findAssets",
     "download": "node download.js",
     "download:force": "node download.js --force",

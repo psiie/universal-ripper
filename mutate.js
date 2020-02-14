@@ -42,7 +42,7 @@ function findElements($) {
     const src = attribs.src || attribs.href; // could be href or src
     const type = attribs.src ? 'src' : 'href';
 
-    if (/resource_icon/.test(src)) console.log(src);
+    if (/resource_icon/.test(src)) console.log(src); // debug line
 
     if (!src) return;
     const attribFilename = filenameFromHref(src, true);
@@ -73,6 +73,8 @@ function processPage(filename, callback) {
   const pathname = path.join(__dirname, 'out/', filename);
   const newPathname = path.join(PATHS.OUT2.BASE, filename);
 
+  // When doing find, we dont save the file to the output path. so any premature modifications dont get saved
+  // when doing mutate, we are ready with our modifications. so we save
   loadFile(pathname)
     .then(bufferToCheerio)
     .then(findElements)
