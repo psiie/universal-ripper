@@ -6,7 +6,7 @@ const Datastore = require('nedb');
 const argv = require('yargs').argv;
 let childProcess = require('child_process');
 const { PATHS, WAIT_INTERVAL } = require('./constants');
-const { extensionFromHref, filenameFromHref } = require('./helper');
+const { extensionFromHref, filenameFromHref } = require('./utils');
 
 const db = new Datastore({ filename: 'assets.db', autoload: true });
 const queue = async.queue(downloadAsset, 8);

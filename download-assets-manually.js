@@ -5,7 +5,7 @@ const async = require('async');
 const path = require('path');
 let childProcess = require('child_process');
 const { PATHS, WAIT_INTERVAL } = require('./constants');
-const { hasher, extensionFromHref, filenameFromHref } = require('./helper');
+const { hasher, extensionFromHref, filenameFromHref } = require('./utils');
 
 const lineReader = readline(PATHS.ASSETS_DB);
 const queue = async.queue(downloadAsset, 4);

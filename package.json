@@ -5,26 +5,28 @@
   "license": "MIT",
   "dependencies": {
     "async": "^3.1.0",
+    "chalk": "^3.0.0",
     "cheerio": "^1.0.0-rc.3",
-    "dotenv": "^8.0.0",
     "download": "^7.1.0",
     "fs-extra": "^8.1.0",
     "linebyline": "^1.3.0",
     "nedb": "^1.8.0",
     "path": "^0.12.7",
+    "puppeteer": "^2.1.1",
     "rimraf": "^2.6.3",
     "sanitize-filename": "^1.6.2",
     "url": "^0.11.0",
     "yargs": "^13.3.0"
   },
   "scripts": {
-    "clean": "rimraf out/ && rimraf assets.db && rimraf pages.db",
+    "clean": "rimraf out/ && rimraf out2/ && rimraf assets.db && rimraf pages.db && rimraf assets_failed.db",
     "clean:assets": "rimraf out/assets/",
     "crawl": "node crawl.js",
     "find": "node mutate.js --findAssets",
     "download": "node download.js",
     "download:force": "node download.js --force",
     "mutate": "node mutate.js",
-    "shrink:assets": "node shrinkAssets.js"
+    "process-assets": "cp -r out/assets out2/assets",
+    "debug:do-everything": "yarn crawl && yarn find && yarn download && yarn mutate && yarn process-assets"
   }
 }

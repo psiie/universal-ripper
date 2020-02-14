@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const readline = require('linebyline');
 const async = require('async');
 const path = require('path');
-const { filenameFromHref } = require('../helper');
+const { filenameFromHref } = require('../utils');
 
 const basePath = path.join(__dirname, 'map');
 fs.mkdirpSync(basePath);

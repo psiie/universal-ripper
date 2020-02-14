@@ -2,8 +2,9 @@ const url = require('url');
 const path = require('path');
 
 const ROOT = 'https://en.unesco.org/womeninafrica/';
+
 const HOSTNAME = url.parse(ROOT).hostname;
-const WAIT_INTERVAL = 1000; // to respect robots.txt
+const WAIT_INTERVAL = 0; // to respect robots.txt
 const PATHS = {
   OUT: {
     BASE: path.join(__dirname, 'out'),

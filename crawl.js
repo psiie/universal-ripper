@@ -3,21 +3,22 @@ const async = require('async');
 const fs = require('fs-extra');
 const path = require('path');
 const url = require('url');
+const chalk = require('chalk');
 const {
   hasher,
   extensionFromHref,
   filenameFromHref,
   save,
   bufferToCheerio,
-} = require('./helper');
+} = require('./utils');
 const {
   ROOT,
   HOSTNAME,
   PATHS,
+  WAIT_INTERVAL,
 } = require('./constants');
 
-// -------------------------------------------------------------------------- //
-
+// -- Setup -- //
 const queueMirror = {}; // used to dedup entries
 fs.mkdirpSync(PATHS.OUT.BASE);
 fs.mkdirpSync(PATHS.OUT.ASSETS);
@@ -28,6 +29,10 @@ fs.writeFileSync(PATHS.ASSETS_DB, '', 'utf8');
 
 function addToQueue(item) {
   const itemStr = item.toString();
+  const { hostname } = url.parse(itemStr);
+  const isSameHost = hostname === HOSTNAME;
+  const isUrlEscapingScope = itemStr.split(ROOT).length < 2;
+
   let hash = '';
 
   try {
@@ -36,13 +41,11 @@ function addToQueue(item) {
     hash = '';
   }
 
-  const { hostname } = url.parse(itemStr);
-
   // abort ifs
-  if (!hash) return;
-  else if (!hash || queueMirror[hash]) return;
-  else if (!(hostname === HOSTNAME || hostname === null)) return; // if not part of this site, abort.
-
+  if (!hash || queueMirror[hash]) return;
+  else if (!isSameHost || hostname === null) return; // if not part of this site, abort.
+  else if (isUrlEscapingScope) return;
+  
   // add to queue
   queueMirror[hash] = true;
   queue.push(item);
@@ -51,11 +54,11 @@ function addToQueue(item) {
 }
 
 function findElements($) {
-  return new Promise((resolve, reject) => {
-    console.log('  + searching for hrefs');
+  return new Promise((resolve /* , reject */) => {
+    console.log(chalk.grey('  + searching for links'));
 
     // find hrefs to further crawl. Save asset links while we are at it.
-    ;['src', 'href'].forEach(selector => {
+    ;['src', 'href'].forEach(selector => { // eslint-disable-line no-extra-semi
       $(`[${selector}]`).each((idx, item) => {
         const { attribs, name } = item || {};
         const src = attribs[selector]; // could be href or src
@@ -66,6 +69,7 @@ function findElements($) {
       });
     });
 
+    console.log(chalk.grey('  + finished searching for links'));
     resolve($.html());
   });
 }
@@ -76,22 +80,29 @@ function processPage(pageHref, callback) {
   const filename = filenameFromHref(pageHref);
   const filepath = path.join(PATHS.OUT.BASE, filename);
   const ext = extensionFromHref(pageHref);
-  const delayCallback = () => setTimeout(callback, WAIT_INTERVAL);
+  const delayCallback = (err) => {
+    if (err) console.log(chalk.red('+ Caught Error:', err))
+    console.log(chalk.green('- Delaying Callback'))
+    setTimeout(callback, WAIT_INTERVAL)
+  };
   const error1 = !pageHref || filename === '';
   const error2 = ext !== 'html' && ext !== 'htm';
   const error3 = fs.existsSync(filepath);
 
-  // abort ifs
-  if (error1 || error2 || error3) {
-    if (error1) console.log('- Skipping. pageHref was null');
-    else if (error2) console.log('- Skipping. Extension is', ext, pageHref);
-    else if (error3) console.log('- Skipping', pageHref, '. Already Exists');
+  console.log('ext:', ext, error2);
+
+  // -- Abort ifs -- //
+  if (error3 || error2 || error1) {
+    // console.log('error', error3, error2, error1)
+    if (error1) console.log(chalk.yellow(`- Skipping. pageHref was null. '${pageHref}' '${filename}'`));
+    else if (error2) console.log(chalk.yellow('- Skipping. Extension is', ext, pageHref));
+    else if (error3) console.log(chalk.yellow('- Skipping', pageHref, '. Already Exists'));
     callback();
     return;
   }
 
   console.log('\nQueue Size Remaining:', queue.length())
-  console.log('- Downloading:', pageHref);
+  console.log(chalk.blue('- Downloading:', pageHref));
 
   get(pageHref)
     .then(bufferToCheerio)
@@ -103,7 +114,8 @@ function processPage(pageHref, callback) {
 
 // -------------------------------------------------------------------------- //
 
-const queue = async.queue(processPage, 4);
+// -- Start -- //
+const queue = async.queue(processPage, 8);
 queue.push(ROOT);
 queue.error(err => console.log('queue error:', err));
 queue.drain(() => console.log('\nAll items have been processed'));
